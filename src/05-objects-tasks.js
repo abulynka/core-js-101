@@ -112,33 +112,156 @@ function fromJSON(proto, json) {
  *  For more examples see unit tests.
  */
 
+class Path {
+  constructor() {
+    this.elements = [];
+    this.ids = [];
+    this.classes = [];
+    this.attrs = [];
+    this.pseudoClasses = [];
+    this.pseudoElements = [];
+    this.path = '';
+  }
+
+  static exception1() {
+    throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+  }
+
+  static exception2() {
+    throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+  }
+
+  element(value) {
+    if (this.pseudoElements.length > 0
+      || this.pseudoClasses.length > 0
+      || this.attrs.length > 0
+      || this.classes.length > 0
+      || this.ids.length > 0) {
+      Path.exception2();
+    }
+    if (this.elements.length > 0) {
+      Path.exception1();
+    }
+    this.elements.push(value);
+    return this;
+  }
+
+  id(value) {
+    if (this.pseudoElements.length > 0
+      || this.pseudoClasses.length > 0
+      || this.attrs.length > 0
+      || this.classes.length > 0) {
+      Path.exception2();
+    }
+    if (this.ids.length > 0) {
+      Path.exception1();
+    }
+    this.ids.push(`#${value}`);
+    return this;
+  }
+
+  class(value) {
+    if (this.pseudoElements.length > 0
+      || this.pseudoClasses.length > 0
+      || this.attrs.length > 0) {
+      Path.exception2();
+    }
+    this.classes.push(`.${value}`);
+    return this;
+  }
+
+  attr(value) {
+    if (this.pseudoElements.length > 0
+      || this.pseudoClasses.length > 0) {
+      Path.exception2();
+    }
+    this.attrs.push(`[${value}]`);
+    return this;
+  }
+
+  pseudoClass(value) {
+    if (this.pseudoElements.length > 0) {
+      Path.exception2();
+    }
+    this.pseudoClasses.push(`:${value}`);
+    return this;
+  }
+
+  pseudoElement(value) {
+    if (this.pseudoElements.length > 0) {
+      Path.exception1();
+    }
+    this.pseudoElements.push(`::${value}`);
+    return this;
+  }
+
+  combine(selector1, combinator, selector2) {
+    this.path = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    return this;
+  }
+
+  stringify() {
+    if (this.path !== '') {
+      return this.path;
+    }
+
+    let result = '';
+
+    if (this.elements.length > 0) {
+      result += this.elements.join('');
+    }
+
+    if (this.ids.length > 0) {
+      result += this.ids.join('');
+    }
+
+    if (this.classes.length > 0) {
+      result += this.classes.join('');
+    }
+
+    if (this.attrs.length > 0) {
+      result += this.attrs.join('');
+    }
+
+    if (this.pseudoClasses.length > 0) {
+      result += this.pseudoClasses.join('');
+    }
+
+    if (this.pseudoElements.length > 0) {
+      result += this.pseudoElements.join('');
+    }
+
+    return result;
+  }
+}
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return new Path().element(value);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return new Path().id(value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return new Path().class(value);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return new Path().attr(value);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return new Path().pseudoClass(value);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return new Path().pseudoElement(value);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    return new Path().combine(selector1, combinator, selector2);
   },
 };
 
